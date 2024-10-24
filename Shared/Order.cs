@@ -1,14 +1,14 @@
-﻿using System;
-
-namespace DeliveryApp.Shared
+﻿namespace DeliveryApp.Shared
 {
     public class Order
     {
         public int Id { get; set; }
-        public string Sender { get; set; }
-        public string Recipient { get; set; }
-        public string PackageDetails { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public string Status { get; set; }
+        public DateTime OrderDate { get; set; }
+        public int StatusId { get; set; }
+        public Status? Status { get; set; }
+        public int UserId { get; set; }
+        public User? User { get; set; }
+        public int AddressId { get; set; }
+        public Address? Address { get; set; }
     }
 }
