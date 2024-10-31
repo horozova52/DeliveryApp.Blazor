@@ -2,6 +2,7 @@
 using DeliveryApp.Shared;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -12,71 +13,55 @@ namespace DeliveryApp.Server.Controllers
     public class OrdersController : ControllerBase
     {
         private readonly CourierAppContext _context;
+        private readonly ILogger<OrdersController> _logger;
 
-        public OrdersController(CourierAppContext context)
+        public OrdersController(CourierAppContext context, ILogger<OrdersController> logger)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Order>>> GetOrders()
         {
-            return await _context.Orders.Include(o => o.User).Include(o => o.Address).ToListAsync();
-        }
-
-        [HttpPost]
-        public async Task<ActionResult<Order>> PostOrder(Order order)
-        {
-            _context.Orders.Add(order);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction("GetOrder", new { id = order.Id }, order);
+            _logger.LogInformation("Fetching all orders");
+            return await _context.Orders.ToListAsync();
         }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<Order>> GetOrder(int id)
         {
-            var order = await _context.Orders.Include(o => o.User).Include(o => o.Address).FirstOrDefaultAsync(o => o.Id == id);
-
-            if (order == null)
-            {
-                return NotFound();
-            }
-
-            return order;
-        }
-
-        [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateOrderStatus(int id, string newStatus)
-        {
+            _logger.LogInformation($"Fetching order with ID: {id}");
             var order = await _context.Orders.FindAsync(id);
             if (order == null)
             {
+                _logger.LogWarning($"Order with ID {id} not found");
                 return NotFound();
             }
-            var status = await _context.Statuses.FirstOrDefaultAsync(s => s.Name == newStatus);
-            if (status == null)
-            {
-                return NotFound("Status not found");
-            }
-            order.Status = status;
-            await _context.SaveChangesAsync();
-
-            return NoContent();
+            return order;
         }
 
+        [HttpPost]
+        public async Task<ActionResult<Order>> PostOrder(Order order)
+        {
+            _logger.LogInformation("Creating a new order");
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction("GetOrder", new { id = order.Id }, order);
+        }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteOrder(int id)
         {
+            _logger.LogInformation($"Deleting order with ID: {id}");
             var order = await _context.Orders.FindAsync(id);
             if (order == null)
             {
+                _logger.LogWarning($"Order with ID {id} not found");
                 return NotFound();
             }
-
             _context.Orders.Remove(order);
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
     }

@@ -1,0 +1,41 @@
+﻿@using DeliveryApp.Shared
+@page "/users"
+@inject HttpClient Http
+
+@code {
+    private List<User> users = new();
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            users = await Http.GetFromJsonAsync<List<User>>("api/Users");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading users: {ex.Message}";
+        }
+    }
+}
+
+<h3>User List</h3>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p style="color: red">@errorMessage</p>
+}
+
+@if (users.Count == 0)
+{
+    <p>No users found.</p>
+}
+else
+{
+    <ul>
+        @foreach (var user in users)
+        {
+            <li>@user.Name - @user.Email</li>
+        }
+    </ul>
+}
